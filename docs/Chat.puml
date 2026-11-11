@@ -1,0 +1,265 @@
+@startuml
+class chat.gui.VentanaUsuario {
+- {static} String VACIO
+- AccionesUsuario usuario
+- Map<Conversacion,PanelConversacion> paneles
+- Map<Conversacion,Integer> noLeidos
+- Map<String,List<String>> miembros
+- Set<String> conectados
+- Set<Conversacion> chats
+- DefaultListModel<Conversacion> modeloLista
+- JList<Conversacion> lista
+- CardLayout tarjetas
+- JPanel derecha
+- Conversacion abierta
+- boolean refrescando
++ void mensajeRecibido(Mensaje)
++ void conectadosActualizados(Set<String>)
++ void agregadoAGrupo(String,List<String>)
++ void error(String)
+- boolean disponible(Conversacion)
+- String detalle(Conversacion)
+- PanelConversacion panel(Conversacion)
+- void abrir(Conversacion)
+- void nuevoGrupo()
+- void refrescar()
+- JPanel panelLateral()
+- JPanel panelVacio()
+- {static} void enEDT(Runnable)
+}
+
+
+class chat.usuarios.Usuario {
+- String nombre
+- MediadorChat mediador
+- OyenteUsuario oyente
++ String getNombre()
++ void setOyente(OyenteUsuario)
++ void conectar()
++ void desconectar()
++ void enviar(Conversacion,String)
++ void crearGrupo(String,Collection<String>)
++ void notificarMensaje(Mensaje)
++ void notificarConectados(Set<String>)
++ void notificarGrupo(String,List<String>)
++ void notificarError(String)
+}
+
+
+interface chat.mediador.MediadorChat {
+~ void registrar(Usuario)
+~ void darDeBaja(Usuario)
+~ void enviar(Mensaje)
+~ void crearGrupo(Usuario,String,Collection<String>)
+}
+
+class chat.mediador.SalaChat {
+- Map<String,Usuario> usuarios
+- Map<String,Set<String>> grupos
+- Map<Conversacion.Tipo,EstrategiaEntrega> estrategias
++ void registrar(Usuario)
++ void darDeBaja(Usuario)
++ void enviar(Mensaje)
++ void crearGrupo(Usuario,String,Collection<String>)
++ boolean estaConectado(String)
++ Set<String> miembros(String)
+- void avisarConectados()
+}
+
+
+class chat.modelo.Mensaje {
+- String emisor
+- Conversacion conversacion
+- String texto
+- LocalTime hora
++ {static} Mensaje nuevo(String,Conversacion,String)
++ Mensaje vistoEn(Conversacion)
++ String texto()
++ LocalTime hora()
++ String emisor()
++ Conversacion conversacion()
+}
+
+
+class chat.Main {
++ {static} void main(String[])
+}
+
+class chat.gui.PanelConversacion {
+- String yo
+- boolean mostrarEmisores
+- JLabel subtitulo
+- JPanel mensajes
+- JScrollPane scroll
+- JTextField campo
+- JButton enviar
+- String ultimoEmisor
+~ void agregar(Mensaje)
+~ void setSubtitulo(String)
+~ void setActivo(boolean)
+~ void enfocar()
+}
+
+
+class chat.gui.PanelConversacion$ListaMensajes {
++ Dimension getPreferredScrollableViewportSize()
++ int getScrollableUnitIncrement(Rectangle,int,int)
++ int getScrollableBlockIncrement(Rectangle,int,int)
++ boolean getScrollableTracksViewportWidth()
++ boolean getScrollableTracksViewportHeight()
+}
+
+class chat.modelo.Conversacion {
+- Tipo tipo
+- String id
++  PRIVADA
++  GRUPO
+- boolean variosParticipantes
+- boolean requiereConexion
++ boolean variosParticipantes()
++ boolean requiereConexion()
++ {static} Conversacion privada(String)
++ {static} Conversacion grupo(String)
++ Tipo tipo()
++ String id()
+}
+
+
+enum chat.modelo.Tipo {
++  PRIVADA
++  GRUPO
+- boolean variosParticipantes
+- boolean requiereConexion
++ boolean variosParticipantes()
++ boolean requiereConexion()
+}
+
+
+interface chat.mediador.EstrategiaEntrega {
+~ Conversacion.Tipo tipo()
+~ List<String> destinatarios(String,Conversacion,Directorio)
+~ Conversacion vistaDelReceptor(String,Conversacion)
+}
+
+class chat.gui.Avatar {
+- int tamano
+- String nombre
+- boolean cuadrado
+- boolean enLinea
+~ Avatar datos(String,boolean,boolean)
+# void paintComponent(Graphics)
+}
+
+
+class chat.mediador.EntregaPrivada {
++ Conversacion.Tipo tipo()
++ List<String> destinatarios(String,Conversacion,Directorio)
++ Conversacion vistaDelReceptor(String,Conversacion)
+}
+
+class chat.gui.Burbuja {
+- {static} int ANCHO_MAXIMO
+- {static} DateTimeFormatter HORA
+- Color fondo
+# void paintComponent(Graphics)
+}
+
+
+class chat.gui.CeldaChat {
+- Predicate<Conversacion> disponible
+- Function<Conversacion,String> detalle
+- ToIntFunction<Conversacion> noLeidos
+- Avatar avatar
+- JLabel nombre
+- JLabel textoDetalle
+- JLabel pendientes
++ Component getListCellRendererComponent(JList<? extends Conversacion>,Conversacion,int,boolean,boolean)
+}
+
+
+class chat.gui.CeldaChat$Insignia {
+# void paintComponent(Graphics)
+}
+
+interface chat.mediador.Directorio {
+~ boolean estaConectado(String)
+~ Set<String> miembros(String)
+}
+
+interface chat.usuarios.OyenteUsuario {
+~ void mensajeRecibido(Mensaje)
+~ void conectadosActualizados(Set<String>)
+~ void agregadoAGrupo(String,List<String>)
+~ void error(String)
+}
+
+class chat.mediador.EntregaGrupo {
++ Conversacion.Tipo tipo()
++ List<String> destinatarios(String,Conversacion,Directorio)
++ Conversacion vistaDelReceptor(String,Conversacion)
+}
+
+interface chat.usuarios.AccionesUsuario {
+~ String getNombre()
+~ void enviar(Conversacion,String)
+~ void crearGrupo(String,Collection<String>)
+~ void desconectar()
+}
+
+class chat.gui.DialogoGrupo {
+~ {static} Optional<Resultado> pedir(Component,Collection<String>)
+- {static} JPanel conTitulo(String,Component)
+}
+
+class chat.gui.DialogoGrupo$Resultado {
+- String nombre
+- List<String> miembros
++ List<String> miembros()
++ String nombre()
+}
+
+
+class chat.gui.Estilo {
+~ {static} Color FONDO_LATERAL
+~ {static} Color FONDO_CHAT
+~ {static} Color FONDO_CAMPO
+~ {static} Color SELECCION
+~ {static} Color SEPARADOR
+~ {static} Color TEXTO
+~ {static} Color TEXTO_SUAVE
+~ {static} Color ACENTO
+~ {static} Color ACENTO_HOVER
+~ {static} Color EN_LINEA
+- {static} List<Color> COLORES_AVATAR
+- {static} String FAMILIA
+- {static} String elegirFuente()
+~ {static} Font fuente(int,float)
+~ {static} Color colorDe(String)
+~ {static} Graphics2D suave(Graphics)
+~ {static} JTextField campo(String)
+~ {static} JButton boton(String,boolean)
+~ {static} JScrollPane scroll(JComponent,Color)
+}
+
+
+
+
+chat.usuarios.OyenteUsuario <|.. chat.gui.VentanaUsuario
+javax.swing.JFrame <|-- chat.gui.VentanaUsuario
+chat.usuarios.AccionesUsuario <|.. chat.usuarios.Usuario
+chat.mediador.MediadorChat <|.. chat.mediador.SalaChat
+chat.mediador.Directorio <|.. chat.mediador.SalaChat
+javax.swing.JPanel <|-- chat.gui.PanelConversacion
+chat.gui.PanelConversacion +.. chat.gui.PanelConversacion$ListaMensajes
+chat.gui.Scrollable <|.. chat.gui.PanelConversacion$ListaMensajes
+chat.gui.JPanel <|-- chat.gui.PanelConversacion$ListaMensajes
+javax.swing.JComponent <|-- chat.gui.Avatar
+chat.mediador.EstrategiaEntrega <|.. chat.mediador.EntregaPrivada
+javax.swing.JPanel <|-- chat.gui.Burbuja
+javax.swing.ListCellRenderer <|.. chat.gui.CeldaChat
+javax.swing.JPanel <|-- chat.gui.CeldaChat
+chat.gui.CeldaChat +.. chat.gui.CeldaChat$Insignia
+chat.gui.JLabel <|-- chat.gui.CeldaChat$Insignia
+chat.mediador.EstrategiaEntrega <|.. chat.mediador.EntregaGrupo
+chat.gui.DialogoGrupo +.. chat.gui.DialogoGrupo$Resultado
+@enduml
